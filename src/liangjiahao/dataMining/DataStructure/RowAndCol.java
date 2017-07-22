@@ -42,6 +42,24 @@ public class RowAndCol<T>{
             this.col[j] = true;
     }
 
+    public RowAndCol(T[][] data,int randomColNum){
+        int row = data.length;
+        int col = data[0].length;
+        this.data = data;
+        this.row = new boolean[row];
+        this.col = new boolean[col];
+        for(int i=0;i<row;i++)
+            this.row[i] = true;
+        for(int j=0;j<col;j++)
+            this.col[j] = true;
+        for(int i=0,n=data[0].length-1-randomColNum;i<3;i++){
+            int index = (int)(Math.random()*(data[0].length-2));
+            if(this.col[index+1])
+                this.col[index+1]=false;
+            else i++;
+        }
+    }
+
     public void delRow(int i){
         row[i]=false;
     }

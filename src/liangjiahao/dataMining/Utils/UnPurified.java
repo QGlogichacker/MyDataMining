@@ -28,6 +28,7 @@ public class UnPurified{
      * @return classfication error
      */
     private static double Classification_error(int...times){
+
         double d = MyUtils.getMax(times);
         double csum = 0;
         for(int time:times)
@@ -45,6 +46,8 @@ public class UnPurified{
         double csum = 0;
         for(int time:times)
             csum+=time;
+        if(csum==0)
+            return 0;
         for(int i =0,size=times.length;i<size;i++){
             double p = times[i]/csum;
             if(p==0)
