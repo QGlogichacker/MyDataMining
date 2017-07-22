@@ -27,6 +27,8 @@ public class C4point5 {
         hashMap = new HashMap<>();
     }
 
+
+
     public static void main(String[] args) {
         C4point5 id3 = new C4point5("/media/logic_hacker/software/c4.5.txt");
         id3.init();
