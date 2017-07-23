@@ -1,18 +1,22 @@
-package liangjiahao.dataMining.Cart;
+package liangjiahao.dataMining.AdaBoost;
 
-import liangjiahao.dataMining.DataStructure.*;
-import liangjiahao.dataMining.Utils.*;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.tuple.Pair;
+import liangjiahao.dataMining.DataStructure.PairsSet;
+import liangjiahao.dataMining.DataStructure.RowAndCol;
+import liangjiahao.dataMining.Utils.ReadForm;
+import liangjiahao.dataMining.Utils.UnPurified;
+import liangjiahao.dataMining.Utils.getSubSet;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
 
 
 /**Cart算法
  * Created by A on 2017/7/19.
  */
-public class Cart {
+public class CartAdaboost {
     private int attrNum;
     private int dataNum;
     private String[] attrName;
@@ -42,7 +46,7 @@ public class Cart {
             else return -1;
         }
     }
-    public Cart(String filePath,int...continal){
+    public CartAdaboost(String filePath, int...continal){
         this.file = new File(filePath);
         int [] arr = continal;
         this.continal = new ArrayList<Integer>();
@@ -52,7 +56,7 @@ public class Cart {
     }
 
     public static void main(String[] args) {
-        Cart cart = new Cart("/media/logic_hacker/software/c4.5 (复件).txt",5);
+        CartAdaboost cart = new CartAdaboost("/media/logic_hacker/software/c4.5 (复件).txt",5);
         cart.init();
         for(int i =1;i<cart.dataNum;i++)
             cart.decide(cart.data[i]);

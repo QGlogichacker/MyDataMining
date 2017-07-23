@@ -1,6 +1,7 @@
 package liangjiahao.dataMining.Utils;
 
 import com.sun.xml.internal.bind.v2.util.ByteArrayOutputStreamEx;
+import org.apache.commons.lang3.SerializationUtils;
 
 import java.io.*;
 import java.lang.reflect.Array;
@@ -42,6 +43,8 @@ public class MyUtils {
         }
         return clonedObj;
     }
+
+
 
     /**
      * @param datas 原来的数组

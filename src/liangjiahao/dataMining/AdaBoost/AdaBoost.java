@@ -1,37 +1,42 @@
-package liangjiahao.dataMining.ID3;
+package liangjiahao.dataMining.AdaBoost;
 
-import liangjiahao.dataMining.Utils.*;
 import liangjiahao.dataMining.DataStructure.RowAndCol;
-import org.apache.commons.lang3.SerializationUtils;
+import liangjiahao.dataMining.Utils.ReadForm;
+import liangjiahao.dataMining.Utils.UnPurified;
 
 import java.io.File;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-/**ID3算法
+/**c4.5算法
  * Created by A on 2017/7/17.
  */
-
-public class  ID3 implements Serializable{
-
+public class AdaBoost {
     private int attrNum;
     private int dataNum;
     private String[] attrName;
     private String[][] data;
     private File file;
     private String resultName;
-    public TreeNode tree;
+    int treeNumber;
+    int charaNumber;
+    public ArrayList<TreeNode> trees;
+    public double w[];
+    public boolean rightList[];
     private float right;
     private float fail;
     private HashMap<String,ArrayList<String>> hashMap;
-    public ID3(String filePath){
+    public AdaBoost(String filePath, int treeNumber, int charaNumber){
         this.file = new File(filePath);
         hashMap = new HashMap<>();
+        this.treeNumber=treeNumber;
+        this.charaNumber=charaNumber;
     }
 
+
+
     public static void main(String[] args) {
-        ID3 id3 = new ID3("/media/logic_hacker/software/c4.5.txt");
+        AdaBoost id3 = new AdaBoost("/media/logic_hacker/software/c4.5.txt",4,1);
         id3.init();
         for(int i =1;i<id3.dataNum;i++)
             id3.decide(id3.data[i]);
@@ -39,8 +44,19 @@ public class  ID3 implements Serializable{
     }
 
     public void decide(String[]str){
-        System.out.println(getDes(tree, str));
-        if(getDes(tree,str).equals(str [attrNum-1]))
+        ArrayList<String> result = hashMap.get(resultName);
+        double[]vote = new double[hashMap.get(resultName).size()];
+        for(TreeNode tr:trees)
+            vote[result.indexOf(getDes(tr, str))]+=(Math.log(1-tr.w)-Math.log(tr.w));
+        int index=0;
+        double max=0;
+        for(int i=0;i<result.size();i++)
+            if(vote[i]>max){
+                index=i;
+                max=vote[i];
+            }
+        System.out.println(result.get(index));
+        if(result.get(index).equals(str [attrNum-1]))
             right++;
         else fail++;
     }
@@ -55,7 +71,7 @@ public class  ID3 implements Serializable{
     }
 
     private boolean stopCondiction(TreeNode tn){
-        return (tn.rac.colLeft()<2||tn.Entropy<0.5);
+        return (tn.rac.colLeft()<3||tn.Entropy==0);
     }  //更改生长终止条件
 
     public  void init(){         //
@@ -63,11 +79,67 @@ public class  ID3 implements Serializable{
         attrName = data[0];//第一行为属性的名字
         attrNum = data[0].length;
         dataNum = data.length;
+        w = new double[dataNum];
+        double aver = 1/dataNum;
+        for(double d:w)
+            d=aver;
         this.readAttr();  //读取data中的信息并构建数据表
         assert dataNum>1:"没有数据！";
-        TreeNode root=new TreeNode(new RowAndCol(data));
-        this.tree = root;
-        root.grow(root);
+        this.trees = new ArrayList<>();
+        for(int i=0;i<this.treeNumber;i++){
+            TreeNode root=new TreeNode(new RowAndCol(data,this.charaNumber));
+            this.trees.add(root);
+            root.grow(root);
+        }
+    }
+
+    class extraData{
+        int number;
+        int index;
+        public extraData(int number, int index) {
+            this.number = number;
+            this.index = index;
+        }
+    }
+
+    void adaboost(int k){
+        for(int i=0;i<k;i++){
+            //TODO:make a xun lian ji
+            double min=1;
+            for(double b:w)
+                if(b<min)
+                    min=b;
+            ArrayList<extraData> arr = new ArrayList<>();
+            for(int a=1;a<dataNum-1;a++)
+                if((w[a]/min-1)>=1)
+                    arr.add(new extraData((int)(w[a]/min-1),a));
+            TreeNode root=new TreeNode(new RowAndCol(data,this.charaNumber));
+            this.trees.add(root);
+            root.grow(root);
+            if(root.w>0.5){
+                k++;
+                continue;
+            }
+            for(int j=0;j<dataNum-1;j++)
+                if(rightList[j])
+                    w[j]*=(root.w/(root.w-1));
+            double sum=0;
+            for(double b:w)
+                sum+=b;
+            for(double b:w)
+                b/=sum;
+        }
+    }
+
+    void errorOfTree(TreeNode root){
+        double sum =0;
+        for(boolean b:rightList)
+            b=false;
+        for(int i=1;i<dataNum;i++)
+            if(!getDes(root,data[i]).equals(data[i][dataNum-1]))
+                sum+=w[i];
+            else rightList[i] = true;
+        root.w=sum;
     }
 
     /**
@@ -76,13 +148,13 @@ public class  ID3 implements Serializable{
      * @return Key为测试条件，Value为子节点的HashMap
      */
     private HashMap<String,TreeNode> findBestSplit(TreeNode parent){
-        double max = 0;
-        int index=1;
-        String nameSelected=data[0][1];
+        double max = -10;
+        int index=0;
+        String nameSelected=null;
         for(int i=1;i<attrNum-1;i++)
             if(parent.rac.colContains(i)){
                 double up=DUP_classWith(parent.rac,data[0][i],parent);
-                if(up>max){
+                if(up>=max){
                     max=up;
                     nameSelected = data[0][i];
                     index = i;
@@ -90,6 +162,7 @@ public class  ID3 implements Serializable{
             }
         parent.rac.delCol(index);
         HashMap<String, TreeNode> NameToNode = new HashMap<>();
+        System.out.println(DUP_classWith(parent.rac,data[0][2],parent));
         for(String str: hashMap.get(nameSelected)){  //对于被选中的元素
             TreeNode treeNode = new TreeNode (parent,nameSelected,str);
             NameToNode.put(str,treeNode);
@@ -125,6 +198,7 @@ public class  ID3 implements Serializable{
         ArrayList classarr=new ArrayList(hashMap.get(name));
         ArrayList resarr = new ArrayList(hashMap.get(resultName));
         int [][] count = new int[classarr.size()][resarr.size()];
+        rac.print();
         for(int i=1,il=rac.getRowLength();i<il;i++){  //对第i行的数据处理
             if(rac.rowContains(i))
                 for(int cla=0;cla<classarr.size();cla++)
@@ -133,7 +207,8 @@ public class  ID3 implements Serializable{
                             if(resarr.get(res).equals(data[i][attrNum-1]))  //对属性name的cla个状态的各个结果进行处理
                                 count[cla][res]++;
         }
-        return DeltaEntropy(parent.Entropy,count);
+        rac.print();
+        return DeltaEntropyratio(parent.Entropy,count);
     }
 
     class TreeNode{
@@ -143,6 +218,7 @@ public class  ID3 implements Serializable{
         private String type;
         public boolean isLeaf;
         public String Divide;
+        public double w;
 
 
         public TreeNode(RowAndCol rac){
@@ -214,9 +290,11 @@ public class  ID3 implements Serializable{
         }
     }
 
-    private double DeltaEntropy(double Iparent,int[][]arr){
+    private double DeltaEntropyratio(double Iparent,int[][]arr){
         int count =0;
         double sum = 0.0;
+        double ratio = 0.0;
+        int whole = arr.length;
         for(int i =0;i<arr.length;i++){ //对属性的状态i进行处理
             double tmp= UnPurified.getUnpurified(UnPurified.ENTROPY,arr[i]); //求出状态i的信息不纯度
             int number = 0;
@@ -224,9 +302,10 @@ public class  ID3 implements Serializable{
                 count+=arr[i][j];     //求记录个数和
                 number+=arr[i][j];    //求状态i的结果总数
             }
+            ratio+=(number/whole);
             sum+=(tmp*number);
         }
-        return Iparent-sum/count; //信息增益值
+        return (Iparent-sum/count)/ratio; //信息增益lv
     }
 }
 
