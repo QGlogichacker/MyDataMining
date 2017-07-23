@@ -37,9 +37,12 @@ public class Cart {
     class MyComparator implements  Comparator{
         @Override
         public int compare(Object o1, Object o2) {
+            if(o1==o2)
+                return 0;
             if(((Continal)o1).value>((Continal)o2).value)
                 return 1;
-            else return -1;
+            else if(((Continal)o1).value==((Continal)o2).value) return 0;
+            else return 1;
         }
     }
     public Cart(String filePath,int...continal){
@@ -52,7 +55,7 @@ public class Cart {
     }
 
     public static void main(String[] args) {
-        Cart cart = new Cart("/media/logic_hacker/software/c4.5 (复件).txt",5);
+        Cart cart = new Cart("/media/logic_hacker/software/DataSet/ban",1,2,3,4,5,6,7,8);
         cart.init();
         for(int i =1;i<cart.dataNum;i++)
             cart.decide(cart.data[i]);

@@ -23,9 +23,13 @@ public class CartAdaboost {
     private String[][] data;
     private File file;
     private String resultName;
-    public TreeNode tree;
     private float right;
     private float fail;
+    int treeNumber;
+    int charaNumber;
+    public ArrayList<TreeNode> trees;
+    public double w[];
+    public boolean rightList[];
     private ArrayList<Integer> continal;
     private HashMap<String,ArrayList<String>> hashMap;
     class Continal{
@@ -56,7 +60,7 @@ public class CartAdaboost {
     }
 
     public static void main(String[] args) {
-        CartAdaboost cart = new CartAdaboost("/media/logic_hacker/software/c4.5 (复件).txt",5);
+        CartAdaboost cart = new CartAdaboost("/media/logic_hacker/software/c4.5.txt",5);
         cart.init();
         for(int i =1;i<cart.dataNum;i++)
             cart.decide(cart.data[i]);
@@ -64,9 +68,80 @@ public class CartAdaboost {
     }
 
 
+    class extraData{
+        int number;
+        int index;
+        public extraData(int number, int index) {
+            this.number = number;
+            this.index = index;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return ((Integer) obj).equals(this.index);
+        }
+    }
+
+    void adaboost(int k){
+        for(int i=0;i<k;i++){
+            //TODO:make a xun lian ji
+            double min=1;
+            w = new double[dataNum];
+            double aver = 1/dataNum;
+            for(double d:w)
+                d=aver;
+            for(double b:w)
+                if(b<min)
+                    min=b;
+            ArrayList<extraData> arr = new ArrayList<>();
+            for(int a=1;a<dataNum-1;a++)
+                if((w[a]/min-1)>=1)
+                    arr.add(new extraData((int)(w[a]/min-1),a));
+            TreeNode root=new TreeNode(new RowAndCol(data,this.charaNumber),arr);
+            errorOfTree(root);
+            this.trees.add(root);
+            root.grow(root);
+            if(root.w>0.5){
+                k++;
+                continue;
+            }
+            for(int j=0;j<dataNum-1;j++)
+                if(rightList[j])
+                    w[j]*=(root.w/(root.w-1));
+            double sum=0;
+            for(double b:w)
+                sum+=b;
+            for(double b:w)
+                b/=sum;
+        }
+    }
+
+    void errorOfTree(TreeNode root){
+        double sum =0;
+        for(boolean b:rightList)
+            b=false;
+        for(int i=1;i<dataNum;i++)
+            if(!getDes(root,data[i]).equals(data[i][dataNum-1]))
+                sum+=w[i];
+            else rightList[i] = true;
+        root.w=sum;
+    }
+
+
     public void decide(String[]str){
-        System.out.println(getDes(tree, str));
-        if(getDes(tree,str).equals(str [attrNum-1]))
+        ArrayList<String> result = hashMap.get(resultName);
+        double[]vote = new double[hashMap.get(resultName).size()];
+        for(TreeNode tr:trees)
+            vote[result.indexOf(getDes(tr, str))]+=(Math.log(1-tr.w)-Math.log(tr.w));
+        int index=0;
+        double max=0;
+        for(int i=0;i<result.size();i++)
+            if(vote[i]>max){
+                index=i;
+                max=vote[i];
+            }
+        System.out.println(result.get(index));
+        if(result.get(index).equals(str [attrNum-1]))
             right++;
         else fail++;
     }
@@ -95,10 +170,13 @@ public class CartAdaboost {
         dataNum = data.length;
         this.readAttr();  //读取data中的信息并构建数据表
         assert dataNum>1:"没有数据！";
-        RowAndCol rowAndCol = new RowAndCol(data);
-        TreeNode root=new TreeNode(rowAndCol);
-        this.tree = root;
-        root.grow(root);
+        this.trees = new ArrayList<>();
+        for(int i=0;i<this.treeNumber;i++){
+            TreeNode root=new TreeNode(new RowAndCol(data,this.charaNumber),null);
+            this.trees.add(root);
+            root.grow(root);
+        }
+        adaboost(7);
     }
 
     /**
@@ -192,7 +270,9 @@ public class CartAdaboost {
                     if(classarr.get(cla).equals(data[i][index]))  //对属性name的第cla个状态进行处理
                         for(int res=0;res<resarr.size();res++)
                             if(resarr.get(res).equals(data[i][attrNum-1]))  //对属性name的cla个状态的各个结果进行处理
-                                count[cla][res]++;
+                                if(parent.extra!=null&&parent.extra.contains(i))
+                                    count[cla][res]+=parent.extra.get(parent.extra.indexOf(i)).number;
+                                else count[cla][res]++;
         if(classarr.size()<=1)
             return null;
         ArrayList<PairsSet> arrs = getSubSet.getPair(classarr.size());
@@ -269,6 +349,7 @@ public class CartAdaboost {
 
     class TreeNode{
         //private double Entropy;
+        public double w;
         private double gini;
         private RowAndCol rac;
         private HashMap<String,TreeNode> son;
@@ -277,9 +358,10 @@ public class CartAdaboost {
         public boolean isLeaf;
         public double bandary;
         public boolean isCon;
+        ArrayList<extraData> extra;
 
 
-        public TreeNode(RowAndCol rac){
+        public TreeNode(RowAndCol rac,ArrayList<extraData> extra){
             this.rac = rac;
             ArrayList resarr = new ArrayList(hashMap.get(resultName));
             int count[] = new int[resarr.size()];
@@ -297,6 +379,7 @@ public class CartAdaboost {
                 }
             type = mark;
             this.gini = 100;
+            this.extra=extra;
             //Entropy = UnPurified.getUnpurfied(UnPurified.ENTROPY,count);
         }
 
@@ -341,6 +424,7 @@ public class CartAdaboost {
             type = mark;
             //parent.Divide = name;
             this.gini = gini;
+            this.extra=parent.extra;
         }
 
         public TreeNode(TreeNode parent,String name,boolean[] barr,double gini,double bandary){
@@ -371,6 +455,7 @@ public class CartAdaboost {
             this.gini = gini;
             parent.bandary =bandary;
             parent.isCon =true;
+            this.extra=parent.extra;
         }
 
         public void grow(TreeNode root){

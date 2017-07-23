@@ -30,7 +30,7 @@ public class C4point5 {
 
 
     public static void main(String[] args) {
-        C4point5 id3 = new C4point5("/media/logic_hacker/software/c4.5.txt");
+        C4point5 id3 = new C4point5("/media/logic_hacker/software/DataSet/abalone 1.data");
         id3.init();
         for(int i =1;i<id3.dataNum;i++)
             id3.decide(id3.data[i]);
@@ -104,7 +104,6 @@ public class C4point5 {
             for(int i=1;i<data.length;i++)
                 if(!attrValue.contains(data[i][j]))  //若未出现则加到属性对应的列表中
                     attrValue.add(data[i][j]);
-
             hashMap.put(data[0][j],attrValue);    //最后将对应的attr名和值加到hashmap中来
         }
         resultName = data[0][attrNum-1];

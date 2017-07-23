@@ -31,7 +31,7 @@ public class  ID3 implements Serializable{
     }
 
     public static void main(String[] args) {
-        ID3 id3 = new ID3("/media/logic_hacker/software/c4.5.txt");
+        ID3 id3 = new ID3("/media/logic_hacker/software/DataSet/adult");
         id3.init();
         for(int i =1;i<id3.dataNum;i++)
             id3.decide(id3.data[i]);
