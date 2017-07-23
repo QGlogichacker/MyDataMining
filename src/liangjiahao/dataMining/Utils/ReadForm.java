@@ -16,7 +16,7 @@ public class ReadForm {
         try {
             BufferedReader br = new BufferedReader(new FileReader(file));
             while((str = br.readLine())!=null){
-                tmp = str.split("," );
+                tmp = str.split(" " );
                 twoDia.add(tmp);
             }
         } catch (Exception e) {

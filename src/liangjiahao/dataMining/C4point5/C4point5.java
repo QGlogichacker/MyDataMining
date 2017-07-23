@@ -30,7 +30,7 @@ public class C4point5 {
 
 
     public static void main(String[] args) {
-        C4point5 id3 = new C4point5("/media/logic_hacker/software/DataSet/abalone 1.data");
+        C4point5 id3 = new C4point5("/media/logic_hacker/software/DataSet/adult1.test");
         id3.init();
         for(int i =1;i<id3.dataNum;i++)
             id3.decide(id3.data[i]);
@@ -54,7 +54,7 @@ public class C4point5 {
     }
 
     private boolean stopCondiction(TreeNode tn){
-        return (tn.rac.colLeft()<2||tn.Entropy<0.5);
+        return (tn.rac.rowLeft()<4||tn.Entropy==0);
     }  //更改生长终止条件
 
     public  void init(){         //
