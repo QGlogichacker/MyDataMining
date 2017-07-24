@@ -77,7 +77,7 @@ public class Cart {
 
     private String getDes(TreeNode tr,String[]str){   //递归调用使用决策树
         if(tr.isCon)
-            return Double.valueOf(str[getIndex(tr.Divide)])>tr.bandary?getDes(tr.son.get("s"),str):getDes(tr.son.get("l"),str);
+            return Double.valueOf(str[getIndex(tr.Divide)])<tr.bandary?getDes(tr.son.get("s"),str):getDes(tr.son.get("l"),str);
         if(tr.isLeaf) return tr.type;
         else if(tr.son.get(str[getIndex(tr.Divide)])==null) return tr.type;
         else return getDes(tr.son.get(str[getIndex(tr.Divide)]),str);

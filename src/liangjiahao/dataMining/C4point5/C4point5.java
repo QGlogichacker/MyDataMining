@@ -5,7 +5,9 @@ import liangjiahao.dataMining.Utils.ReadForm;
 import liangjiahao.dataMining.Utils.UnPurified;
 
 import java.io.File;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 /**c4.5算法
@@ -32,8 +34,9 @@ public class C4point5 {
     public static void main(String[] args) {
         C4point5 id3 = new C4point5("/media/logic_hacker/software/DataSet/adult1.test");
         id3.init();
-        for(int i =1;i<id3.dataNum;i++)
-            id3.decide(id3.data[i]);
+        String[][]test = Arrays.copyOfRange(ReadForm.arr,0,16000);
+        for(int i =1;i<test.length;i++)
+            id3.decide(test[i]);
         id3.report();
     }
 
@@ -50,7 +53,9 @@ public class C4point5 {
 
     private String getDes(TreeNode tr,String[]str){   //递归调用使用决策树
         if(tr.isLeaf) return tr.type;
-        else return getDes(tr.son.get(str[getIndex(tr.Divide)]),str);
+        TreeNode son=tr.son.get(str[getIndex(tr.Divide)]);
+        if(son!=null)return getDes(son,str);
+        else return tr.type;
     }
 
     private boolean stopCondiction(TreeNode tn){
@@ -58,7 +63,8 @@ public class C4point5 {
     }  //更改生长终止条件
 
     public  void init(){         //
-        data = ReadForm.readFile(file);
+        ReadForm.readFile(file);
+        data = Arrays.copyOfRange(ReadForm.arr,0,16000);
         attrName = data[0];//第一行为属性的名字
         attrNum = data[0].length;
         dataNum = data.length;

@@ -33,7 +33,7 @@ public class TheCart {
     }
 
     public static void main(String[] args) {
-        TheCart cart = new TheCart("/media/logic_hacker/software/DataSet/ban.txt");
+        TheCart cart = new TheCart("/media/logic_hacker/software/DataSet/adult1.test");
         cart.init();
         for(int i =1;i<cart.dataNum;i++)
             cart.decide(cart.data[i]);

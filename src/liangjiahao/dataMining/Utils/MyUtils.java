@@ -125,8 +125,8 @@ public class MyUtils {
      * @param <T> 泛型
      * @return 泛型ArrayList列表
      */
-    public static <T> List<T> asList(T...t){
-        List<T>list = new ArrayList<>();
+    public static <T> ArrayList<T> asList(T...t){
+        ArrayList<T>list = new ArrayList<>();
         Collections.addAll(list,t);
         return list;
     }
