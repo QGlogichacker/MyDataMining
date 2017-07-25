@@ -7,6 +7,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Random;
 
 public class NewRandomForest {
     private int attrNum;
@@ -14,17 +15,17 @@ public class NewRandomForest {
     private ArrayList<String> result = new ArrayList<>();
     private File file;
     public ArrayList<TreeNode> trees;
-    int treeNumber = 6;
     private float right;
     private float fail;
+    private Random random = new Random();
 
     public static void main(String[] args) {
         NewRandomForest newCart = new NewRandomForest("/media/logic_hacker/software/DataSet/abalone 1.data");
-        newCart.init(2);
+        newCart.init(16,0.2);
         String [] [] arr = ReadForm.readFile(newCart.file);
         arr = Arrays.copyOfRange(arr,1,4177);
         for(int i =0;i<arr.length;i++)
-            if(!newCart.decide(arr[i],8))
+            if(!newCart.decide(arr[i],20))
                 System.out.println(i);;
 
         newCart.report();
@@ -100,7 +101,7 @@ public class NewRandomForest {
                 Dprint(s,n+1);
     }
 
-    public void init(int num){
+    public void init(int num,double ratio){
         ReadForm.readFile(file);
         String [][]data = Arrays.copyOfRange(ReadForm.arr,0,4177);
         //String [] [] data = ReadForm.arr;
@@ -120,10 +121,10 @@ public class NewRandomForest {
             if(!result.contains(str))
                 result.add(str);
         this.trees = new ArrayList<>();
-        for(int i=0;i<this.treeNumber;i++){
+        for(int i=0;i<num;i++){
             TreeNode root=new TreeNode(bagging.bagging(aad,num,resultList),bagging.result);
             this.trees.add(root);
-            root.grow();
+            root.grow(ratio);
             root.getType();
         }
     }
@@ -155,8 +156,7 @@ public class NewRandomForest {
         }
 
         boolean stopCondiction(){
-            return (this.data.size()<2||gini <0.2);
-            //return this.gini == 0.0;
+            return this.gini == 0.0;
         }
 
 
@@ -210,24 +210,26 @@ public class NewRandomForest {
             this.son = son; //getson
         }
 
-        public void grow(){
+        public void grow(double ratio){
             if(stopCondiction()){
                 this.isLeaf = true;
                 this.getType();
             } else{
-                this.bestClass();
-                son[0].grow();
-                son[1].grow();
+                this.bestClass(ratio);
+                son[0].grow(ratio);
+                son[1].grow(ratio);
             }
         }
 
         /*
          */
-        private void bestClass(){
+        private void bestClass(double ratio){
             double [] resultArr = new double[5];  //
         //  arr[1-2] is the gini,arr[3] is the bandary,arr[4] is the col
             double minmin = data.size();
             for(int j=0,n=data.get(0).size();j<n;j++) { //for every characher
+                if(random.nextDouble()<ratio)
+                    continue;
                 ArrayList<Double> darr = new ArrayList<>();
                 for(int i=0,l=data.size();i<l;i++)
                     if(!darr.contains(data.get(i).get(j)))
@@ -239,7 +241,7 @@ public class NewRandomForest {
                 double bandary=0;
                 double [] tmpres = null;
                 double min = data.size();
-                for(int i=0;i<newArr.size()-2;i++){          //get the mininum of classing this character
+                for(int i=0;i<newArr.size()-1;i++){          //get the mininum of classing this character
                      double tmp = (newArr.get(i)+newArr.get(i+1))/2;
                     double[] gini=getGini(tmp,j);
                     if(gini[2]<min){
