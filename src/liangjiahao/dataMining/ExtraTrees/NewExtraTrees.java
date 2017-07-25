@@ -25,7 +25,7 @@ public class NewExtraTrees {
         String [] [] arr = ReadForm.readFile(newCart.file);
         arr = Arrays.copyOfRange(arr,1,4177);
         for(int i =0;i<arr.length;i++)
-            if(!newCart.decide(arr[i],20))
+            if(!newCart.decide(arr[i],8))
                 System.out.println(i);;
 
         newCart.report();

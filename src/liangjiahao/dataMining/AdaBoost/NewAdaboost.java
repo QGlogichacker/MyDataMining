@@ -1,4 +1,4 @@
-package liangjiahao.dataMining.Cart;
+package liangjiahao.dataMining.AdaBoost;
 
 import liangjiahao.dataMining.Utils.ReadForm;
 import liangjiahao.dataMining.Utils.UnPurified;
@@ -7,46 +7,64 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.TreeSet;
+import java.util.Random;
 
-public class NewCart {
+public class NewAdaboost {
+    private Random random= new Random();
     private int attrNum;
     private String[] attrName;
     private ArrayList<String> result = new ArrayList<>();
     private File file;
-    public TreeNode tree;
+    public ArrayList<TreeNode> trees= new ArrayList<>();
     private float right;
     private float fail;
+    public ArrayList<ArrayList<Double>> MData;
+    public ArrayList<String> MRes;
+    public double [] dataW;
 
     public static void main(String[] args) {
-        NewCart newCart = new NewCart("/media/logic_hacker/software/DataSet/abalone 1.data");
-        newCart.init();
-        print(newCart.tree);
+        NewAdaboost newCart = new NewAdaboost("/media/logic_hacker/software/DataSet/abalone 1.data");
+        newCart.init(10);
         String [] [] arr = ReadForm.readFile(newCart.file);
         arr = Arrays.copyOfRange(arr,1,4177);
+
         for(int i =0;i<arr.length;i++)
             if(!newCart.decide(arr[i],8))
                 System.out.println(i);;
 
         newCart.report();
+
     }
 
 
-    public NewCart(String filePath) {
+    public NewAdaboost(String filePath) {
         this.file = new File(filePath);
     }
 
     public boolean decide(String[]str,int result){
-        if(getDes(tree,str).equals(str [result])) {
+        double[]vote = new double[this.result.size()];
+        for(TreeNode tr:trees)
+            vote[this.result.indexOf(getDes(tr, str))]+=tr.getWeight();
+        double max=0;
+        int index=0;
+        //search for the most voted class
+        for(int i=0;i<this.result.size();i++)
+            if(vote[i]>max){
+                index=i;
+                max=vote[i];
+            }
+        System.out.println(this.result.get(index));
+        if(this.result.get(index).equals(str [result])){
             right++;
             return true;
-        }else {
-            System.out.println(getDes(tree, str));
-            System.out.println(Arrays.toString(str));
+        }
+        else {
             fail++;
             return false;
         }
     }
+
+
 
     int getIndex(String s){
         for(int i=0;i<attrNum;i++)
@@ -65,6 +83,11 @@ public class NewCart {
         else return Double.valueOf(str[getIndex(tr.divide)+1])<tr.bandary?getDes(tr.son[0],str):getDes(tr.son[1],str);
     }
 
+    private String getDes(TreeNode tr,ArrayList<Double>arr){   //递归调用使用决策树
+        if(tr.isLeaf) return tr.type;
+        else return arr.get(getIndex(tr.divide))<tr.bandary?getDes(tr.son[0],arr):getDes(tr.son[1],arr);
+    }
+
     public static void print(TreeNode root){
         if(root == null)
             return ;
@@ -80,10 +103,11 @@ public class NewCart {
                 Dprint(s,n+1);
     }
 
-    public void init(){
+    public void init(int num){
         ReadForm.readFile(file);
         String [][]data = Arrays.copyOfRange(ReadForm.arr,0,4177);
         //String [] [] data = ReadForm.arr;
+        //transform the data form string to double
         attrName = data[0];
         attrNum = attrName.length;
         ArrayList<String> resultList = new ArrayList<>();
@@ -96,17 +120,113 @@ public class NewCart {
             resultList.add(data[i][data[0].length-1]);
             aad.add(ad);
         }
+        //aad is the double data,resultList is the String result
+
+        //construct the data form
+        this.MData = aad;
+        this.MRes = resultList;
+        dataW = new double[resultList.size()];
         for(String str:resultList)
             if(!result.contains(str))
                 result.add(str);
-        TreeNode root=new TreeNode(aad,resultList);
-        this.tree = root;
-        root.getType();
-        root.grow();
+
+        adaboost(num);
+        //adaboost
+
+
+
+
+    }
+
+    class TraningSet{
+        ArrayList<ArrayList<Double>> arrayList;
+        ArrayList<String> resultList;
+        TraningSet(ArrayList<ArrayList<Double>> arrayList,ArrayList<String> resultList,double[]dataW){
+            ArrayList<ArrayList<Double>> newArr = new ArrayList<>();
+            ArrayList<String> newArr2 = new ArrayList<>();
+            assert dataW.length==arrayList.size();
+            double min = 1;
+            for(int i=0;i<dataW.length;i++)
+                if(dataW[i]<min)
+                    min = dataW[i];
+            int[]number = new int[dataW.length];
+            for(int i=0;i<dataW.length;i++)
+                number[i] = (int)Math.rint(dataW[i]/min);
+            for(int i=0;i<dataW.length;i++)
+                for(int num=0;num<number[i];num++){
+                    if(random.nextInt()%4==0)
+                        continue;
+                    newArr.add(arrayList.get(i));
+                    newArr2.add(resultList.get(i));
+                }
+            for(int i=0;i<dataW.length;i++)
+                for(int num=0;num<number[i];num++){
+                    if(random.nextInt()%4==3)
+                        continue;
+                    newArr.add(arrayList.get(i));
+                    newArr2.add(resultList.get(i));
+                }
+            this.arrayList = newArr;
+            this.resultList = newArr2;
+        }
+        TreeNode newTree(){
+            TreeNode root=new TreeNode(arrayList,resultList);
+            root.grow();
+            root.getType();
+            return root;
+        }
+    }
+
+
+    void adaboost(int k){
+        int datanum =MData.size();
+        this.dataW = new double[datanum];
+        for(int i=0;i<datanum;i++)
+            dataW[i]=1/(double)datanum; //standard the weight
+        for(int i=0;i<k;i++){ //for k round
+            TraningSet ts = new TraningSet(MData,MRes,dataW);
+            TreeNode root = ts.newTree();
+            boolean[]fail = errorOfTree(root,dataW);
+
+            //delete the tree with too high error or lowest
+            if(root.error>0.5||root.error==0)
+                continue;
+
+            this.trees.add(root);
+
+            //decrease the weight of data who is rightly classed
+            for(int right=0;right<datanum;right++)
+                if(!fail[i])
+                    dataW[i] = root.error/(1-root.error);
+
+            //standard the weight
+            double sum = 0;
+            for(double b:dataW)
+                sum+=b;
+            for(double b:dataW)
+                b/=sum;
+        }
+    }
+
+    boolean[] errorOfTree(TreeNode root,double[]dataW){
+        double sum =0;
+        boolean[] fail = new boolean[dataW.length];
+        ArrayList<String> res = new ArrayList<>();
+        for(int i=0;i<MData.size();i++)
+            res.add(getDes(root,MData.get(i)));
+        for(int i=0;i<MData.size();i++)
+            if(!res.get(i).equals(MRes.get(i))) {//result un match
+                fail[i]=true;
+                sum+=dataW[i];
+            }
+        root.error=sum;
+        return fail;
+
     }
 
     class TreeNode {
         //private double Entropy;
+        private double error;
         private double gini = 100;
         private TreeNode []son;
         private String divide;
@@ -119,6 +239,9 @@ public class NewCart {
         public ArrayList<ArrayList<Double>> data;
         private ArrayList<String> resultList;
 
+        double getWeight(){
+            return Math.log(1-this.error)-Math.log(this.error);
+        }
 
         @Override
         public String toString() {
@@ -132,7 +255,6 @@ public class NewCart {
         }
 
         boolean stopCondiction(){
-            //return (this.data.size()<2||gini <0.2);
             return this.gini == 0.0;
         }
 
@@ -155,7 +277,7 @@ public class NewCart {
             int max=count[0];
             int index = 0;
             for(int i=0;i<count.length;i++)
-                if(count[i]>=max){
+                if(count[i]>max){
                     index = i;
                     max = count[i];
                 }
@@ -188,7 +310,7 @@ public class NewCart {
         }
 
         public void grow(){
-            System.out.println("IM GROWING!");
+            System.out.println("GROWING");
             if(stopCondiction()){
                 this.isLeaf = true;
                 this.getType();
@@ -203,7 +325,7 @@ public class NewCart {
          */
         private void bestClass(){
             double [] resultArr = new double[5];  //
-        //  arr[1-2] is the gini,arr[3] is the bandary,arr[4] is the col
+            //  arr[1-2] is the gini,arr[3] is the bandary,arr[4] is the col
             double minmin = data.size();
             for(int j=0,n=data.get(0).size();j<n;j++) { //for every characher
                 ArrayList<Double> darr = new ArrayList<>();
@@ -218,7 +340,7 @@ public class NewCart {
                 double [] tmpres = null;
                 double min = data.size();
                 for(int i=0;i<newArr.size()-1;i++){          //get the mininum of classing this character
-                     double tmp = (newArr.get(i)+newArr.get(i+1))/2;
+                    double tmp = (newArr.get(i)+newArr.get(i+1))/2;
                     double[] gini=getGini(tmp,j);
                     if(gini[2]<min){
                         min =gini[2];
