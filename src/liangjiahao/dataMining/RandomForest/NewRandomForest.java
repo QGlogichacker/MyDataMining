@@ -1,4 +1,4 @@
-package liangjiahao.dataMining.Cart;
+package liangjiahao.dataMining.RandomForest;
 
 import liangjiahao.dataMining.Utils.ReadForm;
 import liangjiahao.dataMining.Utils.UnPurified;
@@ -7,21 +7,20 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.TreeSet;
 
-public class NewCart {
+public class NewRandomForest {
     private int attrNum;
     private String[] attrName;
     private ArrayList<String> result = new ArrayList<>();
     private File file;
-    public TreeNode tree;
+    public ArrayList<TreeNode> trees;
+    int treeNumber = 6;
     private float right;
     private float fail;
 
     public static void main(String[] args) {
-        NewCart newCart = new NewCart("/media/logic_hacker/software/DataSet/abalone 1.data");
-        newCart.init();
-        print(newCart.tree);
+        NewRandomForest newCart = new NewRandomForest("/media/logic_hacker/software/DataSet/abalone 1.data");
+        newCart.init(2);
         String [] [] arr = ReadForm.readFile(newCart.file);
         arr = Arrays.copyOfRange(arr,1,4177);
         for(int i =0;i<arr.length;i++)
@@ -32,11 +31,12 @@ public class NewCart {
     }
 
 
-    public NewCart(String filePath) {
+    public NewRandomForest(String filePath) {
         this.file = new File(filePath);
     }
 
     public boolean decide(String[]str,int result){
+        /**
         if(getDes(tree,str).equals(str [result])) {
             right++;
             return true;
@@ -45,8 +45,28 @@ public class NewCart {
             System.out.println(Arrays.toString(str));
             fail++;
             return false;
+        }*/
+        int[]vote = new int[this.result.size()];
+        for(TreeNode tr:trees)
+            vote[this.result.indexOf(getDes(tr, str))]++;
+        int max=0,index=0;
+        for(int i=0;i<this.result.size();i++)
+            if(vote[i]>max){
+                index=i;
+                max=vote[i];
+            }
+        System.out.println(this.result.get(index));
+        if(this.result.get(index).equals(str [attrNum-1])){
+            right++;
+            return true;
+        }
+        else {
+            fail++;
+            return false;
         }
     }
+
+
 
     int getIndex(String s){
         for(int i=0;i<attrNum;i++)
@@ -80,7 +100,7 @@ public class NewCart {
                 Dprint(s,n+1);
     }
 
-    public void init(){
+    public void init(int num){
         ReadForm.readFile(file);
         String [][]data = Arrays.copyOfRange(ReadForm.arr,0,4177);
         //String [] [] data = ReadForm.arr;
@@ -99,10 +119,13 @@ public class NewCart {
         for(String str:resultList)
             if(!result.contains(str))
                 result.add(str);
-        TreeNode root=new TreeNode(aad,resultList);
-        this.tree = root;
-        root.getType();
-        root.grow();
+        this.trees = new ArrayList<>();
+        for(int i=0;i<this.treeNumber;i++){
+            TreeNode root=new TreeNode(bagging.bagging(aad,num,resultList),bagging.result);
+            this.trees.add(root);
+            root.grow();
+            root.getType();
+        }
     }
 
     class TreeNode {
