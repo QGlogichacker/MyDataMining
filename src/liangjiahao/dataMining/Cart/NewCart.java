@@ -23,7 +23,7 @@ public class NewCart {
         newCart.init();
         print(newCart.tree);
         String [] [] arr = ReadForm.readFile(newCart.file);
-        arr = Arrays.copyOfRange(arr,1,4177);
+        arr = Arrays.copyOfRange(arr,1001,4177);
         for(int i =0;i<arr.length;i++)
             if(!newCart.decide(arr[i],8))
                 System.out.println(i);;
@@ -82,7 +82,7 @@ public class NewCart {
 
     public void init(){
         ReadForm.readFile(file);
-        String [][]data = Arrays.copyOfRange(ReadForm.arr,0,4177);
+        String [][]data = Arrays.copyOfRange(ReadForm.arr,0,3000);
         //String [] [] data = ReadForm.arr;
         attrName = data[0];
         attrNum = attrName.length;

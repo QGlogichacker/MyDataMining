@@ -34,7 +34,7 @@ public class C4point5 {
     public static void main(String[] args) {
         C4point5 id3 = new C4point5("/media/logic_hacker/software/DataSet/adult1.test");
         id3.init();
-        String[][]test = Arrays.copyOfRange(ReadForm.arr,0,16000);
+        String[][]test = Arrays.copyOfRange(ReadForm.arr,5000,16000);
         for(int i =1;i<test.length;i++)
             id3.decide(test[i]);
         id3.report();
@@ -64,7 +64,7 @@ public class C4point5 {
 
     public  void init(){         //
         ReadForm.readFile(file);
-        data = Arrays.copyOfRange(ReadForm.arr,0,16000);
+        data = Arrays.copyOfRange(ReadForm.arr,0,11000);
         attrName = data[0];//第一行为属性的名字
         attrNum = data[0].length;
         dataNum = data.length;

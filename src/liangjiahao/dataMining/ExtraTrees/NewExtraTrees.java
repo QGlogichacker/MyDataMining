@@ -21,9 +21,9 @@ public class NewExtraTrees {
 
     public static void main(String[] args) {
         NewExtraTrees newCart = new NewExtraTrees("/media/logic_hacker/software/DataSet/abalone 1.data");
-        newCart.init(16,0.2);
+        newCart.init(16);
         String [] [] arr = ReadForm.readFile(newCart.file);
-        arr = Arrays.copyOfRange(arr,1,4177);
+        arr = Arrays.copyOfRange(arr,1,3000);
         for(int i =0;i<arr.length;i++)
             if(!newCart.decide(arr[i],8))
                 System.out.println(i);;
@@ -101,9 +101,9 @@ public class NewExtraTrees {
                 Dprint(s,n+1);
     }
 
-    public void init(int num,double ratio){
+    public void init(int num){
         ReadForm.readFile(file);
-        String [][]data = Arrays.copyOfRange(ReadForm.arr,0,4177);
+        String [][]data = Arrays.copyOfRange(ReadForm.arr,1000,4177);
         //String [] [] data = ReadForm.arr;
         attrName = data[0];
         attrNum = attrName.length;
@@ -124,7 +124,7 @@ public class NewExtraTrees {
         for(int i=0;i<num;i++){
             TreeNode root=new TreeNode(aad,resultList);
             this.trees.add(root);
-            root.grow(ratio);
+            root.grow();
             root.getType();
         }
     }
@@ -210,20 +210,20 @@ public class NewExtraTrees {
             this.son = son; //getson
         }
 
-        public void grow(double ratio){
+        public void grow(){
             if(stopCondiction()){
                 this.isLeaf = true;
                 this.getType();
             } else{
-                this.bestClass(ratio);
-                son[0].grow(ratio);
-                son[1].grow(ratio);
+                this.bestClass();
+                son[0].grow();
+                son[1].grow();
             }
         }
 
         /*
          */
-        private void bestClass(double ratio){
+        private void bestClass(){
             double [] resultArr = new double[5];  //
         //  arr[1-2] is the gini,arr[3] is the bandary,arr[4] is the col
             double minmin = data.size();

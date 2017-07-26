@@ -26,7 +26,7 @@ public class NewAdaboost {
         NewAdaboost newCart = new NewAdaboost("/media/logic_hacker/software/DataSet/abalone 1.data");
         newCart.init(10);
         String [] [] arr = ReadForm.readFile(newCart.file);
-        arr = Arrays.copyOfRange(arr,1,4177);
+        arr = Arrays.copyOfRange(arr,1001,4177);
 
         for(int i =0;i<arr.length;i++)
             if(!newCart.decide(arr[i],8))
@@ -105,7 +105,7 @@ public class NewAdaboost {
 
     public void init(int num){
         ReadForm.readFile(file);
-        String [][]data = Arrays.copyOfRange(ReadForm.arr,0,4177);
+        String [][]data = Arrays.copyOfRange(ReadForm.arr,0,3000);
         //String [] [] data = ReadForm.arr;
         //transform the data form string to double
         attrName = data[0];
@@ -154,14 +154,14 @@ public class NewAdaboost {
                 number[i] = (int)Math.rint(dataW[i]/min);
             for(int i=0;i<dataW.length;i++)
                 for(int num=0;num<number[i];num++){
-                    if(random.nextInt()%4==0)
+                    if(random.nextInt()%2==0)
                         continue;
                     newArr.add(arrayList.get(i));
                     newArr2.add(resultList.get(i));
                 }
             for(int i=0;i<dataW.length;i++)
                 for(int num=0;num<number[i];num++){
-                    if(random.nextInt()%4==3)
+                    if(random.nextInt()%2==1)
                         continue;
                     newArr.add(arrayList.get(i));
                     newArr2.add(resultList.get(i));

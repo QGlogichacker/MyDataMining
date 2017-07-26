@@ -21,9 +21,9 @@ public class NewRandomForest {
 
     public static void main(String[] args) {
         NewRandomForest newCart = new NewRandomForest("/media/logic_hacker/software/DataSet/abalone 1.data");
-        newCart.init(16,0.2);
+        newCart.init(10,0.2);
         String [] [] arr = ReadForm.readFile(newCart.file);
-        arr = Arrays.copyOfRange(arr,1,4177);
+        arr = Arrays.copyOfRange(arr,1001,4177);
         for(int i =0;i<arr.length;i++)
             if(!newCart.decide(arr[i],20))
                 System.out.println(i);;
@@ -103,7 +103,7 @@ public class NewRandomForest {
 
     public void init(int num,double ratio){
         ReadForm.readFile(file);
-        String [][]data = Arrays.copyOfRange(ReadForm.arr,0,4177);
+        String [][]data = Arrays.copyOfRange(ReadForm.arr,0,3000);
         //String [] [] data = ReadForm.arr;
         attrName = data[0];
         attrNum = attrName.length;

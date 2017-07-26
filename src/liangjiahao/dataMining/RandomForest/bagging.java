@@ -13,12 +13,12 @@ public class bagging {
         result = new ArrayList<>();
         int rowL = data.size();
         for(int i=0;i<rowL;i++)
-            if(random.nextInt()%4==0){
+            if(random.nextInt()%2==0){
                 newData.add(data.get(i));
                 result.add(aresult.get(i));
             }
         for(int i=0;i<rowL;i++)
-            if(random.nextInt()%4==3){
+            if(random.nextInt()%2==1){
                 newData.add(data.get(i));
                 result.add(aresult.get(i));
             }
